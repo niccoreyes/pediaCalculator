@@ -1,7 +1,6 @@
 import 'package:editable/editable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'assets.dart';
 
 void main() {
   runApp(const MyApp());
