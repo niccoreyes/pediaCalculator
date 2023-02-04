@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.pedia_table">
    <application
-        android:label="pedia_table"
+        android:label="Pedia calculator"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
