@@ -1,6 +1,6 @@
 {
-    "name": "pedia_table",
-    "short_name": "pedia_table",
+    "name": "Pedia Fluid Calculator",
+    "short_name": "Pedia Fluid",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#hexcode",

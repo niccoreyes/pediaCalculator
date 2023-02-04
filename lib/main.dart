@@ -116,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var bodySurfaceArea = Text("BSA: ${returnBSA()}");
     var inputOutput = Text("I/O: ${formVal?['Input']}:${formVal?['Output']}");
     var fluidBalance = Text(
-        "Fluid balance: ${(parseForm('Input') - parseForm('Output')).toStringAsFixed(2)}");
+        "FB: ${(parseForm('Input') - parseForm('Output')).toStringAsFixed(2)}");
 
     void setInsensible() {
       double febrile = formVal?['Febrile'] == "No" ? 400.00 : 500.00;
@@ -192,7 +192,12 @@ class _MyHomePageState extends State<MyHomePage> {
                                       onPressed: () async {
                                         await Clipboard.setData(ClipboardData(
                                             text:
-                                                "${inputOutput.data}\n${insensibleLosses.data}"));
+                                                """Ht: ${formVal?['Height']} Wt: ${formVal?['Weight']}
+${bodySurfaceArea.data}
+${inputOutput.data}
+${urineOutput.data}
+${fluidBalance.data}
+${insensibleLosses.data}"""));
                                       },
                                       child: const Text("Copy to Clipboard"))
                                 ],
