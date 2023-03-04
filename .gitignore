@@ -1,3 +1,6 @@
+# Tokens
+lib/config.dart
+
 # Miscellaneous
 *.class
 *.log
