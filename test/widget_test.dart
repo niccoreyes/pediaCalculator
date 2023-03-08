@@ -55,4 +55,19 @@ void main() {
     String output = input.replaceFirst(regex, r'$1°C');
     print(output);
   });
+  test("has Decimal test", () {
+    double doubleFluidBalance = 0.32 - 300.32;
+    String stringFluidBalance = "";
+    if (doubleFluidBalance > 0) {
+      stringFluidBalance += "+";
+    }
+    bool hasDecimal(String str) {
+      return str.contains(".00");
+    }
+
+    stringFluidBalance = doubleFluidBalance.toStringAsFixed(2);
+
+    print("+479.03".replaceAll(RegExp(r'\.00$'), '')); // true
+    print(stringFluidBalance.replaceAll(RegExp(r'\.00$'), '')); // false
+  });
 }

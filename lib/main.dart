@@ -96,7 +96,10 @@ class _MyHomePageState extends State<MyHomePage> {
         'Urine': Icons.water_drop_outlined,
         'BM': Icons.delete,
       };
-      iconLook = Icon(iconMap[label]);
+      if (iconMap[label] != null) {
+        iconLook = Icon(iconMap[label]);
+      }
+
       return iconLook;
     }
 
@@ -207,7 +210,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     //this autogenerates in FormTextFields - meaning they will be in text
-    FormBuilderTextField formBuilderText(String label, {Widget? suffixButton}) {
+    FormBuilderTextField formBuilderText(String label,
+        {Widget? suffixButton, void Function()? onTapFunction}) {
       Map<String, dynamic> labelKeyboard = {
         "Name": TextInputType.text,
         "BM": TextInputType.text,
@@ -250,8 +254,10 @@ class _MyHomePageState extends State<MyHomePage> {
           // setState(() {
           // });
         },
+        onTap: onTapFunction,
         keyboardType: getKeyboardType(),
         textInputAction: TextInputAction.next,
+        autofocus: true,
       );
     }
 
@@ -267,7 +273,20 @@ class _MyHomePageState extends State<MyHomePage> {
         options: options
             .map((yn) => FormBuilderFieldOption(
                   value: yn,
-                  child: Text(yn, style: TextStyle(fontSize: labelOption)),
+                  child: (() {
+                    // your code here
+                    if (yn == "Custom") {
+                      return formVal?['Shift'] == "Custom"
+                          ? formBuilderText("Custom", onTapFunction: () {
+                              debugPrint("tapped");
+                              _formKey.currentState?.fields[keyName]
+                                  ?.didChange(yn);
+                            })
+                          : Text(yn, style: TextStyle(fontSize: labelOption));
+                    } else {
+                      return Text(yn, style: TextStyle(fontSize: labelOption));
+                    }
+                  }()),
                 ))
             .toList(growable: false),
         controlAffinity: ControlAffinity.trailing,
@@ -354,7 +373,9 @@ class _MyHomePageState extends State<MyHomePage> {
       if (doubleFluidBalance > 0) {
         stringFluidBalance += "+";
       }
-      stringFluidBalance += doubleFluidBalance.toStringAsFixed(0);
+      stringFluidBalance += doubleFluidBalance.toStringAsFixed(2);
+      stringFluidBalance = stringFluidBalance.replaceAll(RegExp(r'\.00$'), '');
+
       return stringFluidBalance;
     }
 
@@ -365,6 +386,7 @@ class _MyHomePageState extends State<MyHomePage> {
     void setInsensible() {
       double febrile = formVal?['Febrile'] == "No" ? 400.00 : 500.00;
       double shift = formVal?['Shift'] == "Daily" ? 1.0 : 3.0;
+      if (formVal?['Shift'] == "Custom") {}
       bool isNewborn = (formVal?['Newborn'] ?? "No") == "No" ? false : true;
 
       double calculatedInsense = (calculated['BSA'] ?? 0.00) * febrile / shift;
@@ -809,11 +831,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Column(
                     children: [
                       formRadio(null, 'Shift',
-                          ['Shift (6-2)', 'Shift (2-10)', 'Daily']),
+                          ['Shift (6-2)', 'Shift (2-10)', 'Daily', 'Custom']),
                       formRadio(
                           'Had Febrile episode?', 'Febrile', ['No', 'Yes']),
-                      formRadio(
-                          'First month of life', 'isNewborn', ['No', 'Yes'],
+                      formRadio('First month of life (NICU)', 'isNewborn',
+                          ['No', 'Yes'],
                           labelFont: 14, labelOption: 14),
                       formRadio('Full Keyboard (No = numeric)', 'keyboard',
                           ['Yes', 'No'],
@@ -1054,20 +1076,22 @@ class _MyHomePageState extends State<MyHomePage> {
                   final sheet = ss.worksheetByTitle('PatientList');
 
                   // makes sure no empty cells are added
-                  String spaceSafety(String text) {
+                  String spaceSafety(String text, {String labelText = "0"}) {
                     String safeText = text;
                     if (text == "") {
-                      safeText = "0";
+                      safeText = labelText;
                     }
                     return safeText;
                   }
 
+                  var nameText =
+                      spaceSafety(controllerName.text, labelText: "Untitled");
                   var heightText = spaceSafety(controllerHeight.text);
                   var weightText = spaceSafety(controllerWeight.text);
 
                   // add the data to the Google Sheets
                   await sheet?.values
-                      .appendRow([controllerName.text, heightText, weightText]);
+                      .appendRow([nameText, heightText, weightText]);
                   //await Future.delayed(Duration(seconds: 1));
                   setState(() {
                     isLoading = false;
