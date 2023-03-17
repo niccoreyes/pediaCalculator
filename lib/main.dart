@@ -307,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     double parseForm(String key) {
       try {
-        double myDouble = double.parse(formVal?[key]);
+        double myDouble = double.tryParse(formVal?[key] ?? "") ?? 0.00;
         return myDouble;
       } catch (e) {
         debugPrint("Error: $e");
@@ -319,6 +319,7 @@ class _MyHomePageState extends State<MyHomePage> {
       double calculatedBSA =
           sqrt((parseForm('Height') * parseForm('Weight')) / 3600);
       calculated['BSA'] = calculatedBSA;
+      debugPrint("not newborn debug Calculated BSA ${calculated['BSA']}");
       return calculatedBSA.toStringAsFixed(2);
     }
 
@@ -359,7 +360,7 @@ class _MyHomePageState extends State<MyHomePage> {
           if (calculatedFBInsense > 0) {
             previousInsenseString += "+";
           }
-          previousInsenseString += calculatedFBInsense.toStringAsFixed(0);
+          previousInsenseString += calculatedFBInsense.toStringAsFixed(2);
         }
       }
 
@@ -383,35 +384,38 @@ class _MyHomePageState extends State<MyHomePage> {
         "FB ${processFluidBalancePlusMinus()} / ${returnPreviousInsense()}");
 
     // insensible
-    void setInsensible() {
+    double setInsensible() {
       double febrile = formVal?['Febrile'] == "No" ? 400.00 : 500.00;
       double shift = formVal?['Shift'] == "Daily" ? 1.0 : 3.0;
       if (formVal?['Shift'] == "Custom") {}
-      bool isNewborn = (formVal?['Newborn'] ?? "No") == "No" ? false : true;
+      bool isNewborn = (formVal?['isNewborn'] ?? "No") == "No" ? false : true;
 
       double calculatedInsense = (calculated['BSA'] ?? 0.00) * febrile / shift;
       // debugPrint(
       //     "Insensible = ${calculated['BSA']} * $febrile / $shift =  $calculatedInsense");
       if (!isNewborn) {
         calculated['Insensible'] = calculatedInsense;
+        //debugPrint(
+        //    "Not Newborn ${calculated['BSA']} calculated Insense: $shift");
       } else {
         double weight = double.tryParse(formVal?['Weight'] ?? "") ?? 0.00;
-        if (weight < 750) {
+        if (weight < 0.750) {
           calculatedInsense = weight * 100 / shift;
-        } else if (weight <= 1000) {
+        } else if (weight <= 1.000) {
           calculatedInsense = weight * 70 / shift;
-        } else if (weight <= 1500) {
+        } else if (weight <= 1.500) {
           calculatedInsense = weight * 65 / shift;
         } else {
           calculatedInsense = weight * 30 / shift;
         }
         calculated['Insensible'] = calculatedInsense;
+        //debugPrint("Newborn $calculatedInsense");
       }
-      return;
+      return calculatedInsense;
     }
 
     var textInsensiblelosses =
-        Text("Insensible ${calculated['Insensible']?.toStringAsFixed(2)}");
+        Text("Insensible ${setInsensible().toStringAsFixed(2)}");
 
     // urine out
     double calculateUO() {
@@ -421,7 +425,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return calculated["UO"] ?? 0.00;
     }
 
-    var textUrineoutput = Text("UO ${calculateUO().toStringAsFixed(1)}");
+    var textUrineoutput = Text("UO ${calculateUO().toStringAsFixed(2)}");
 
     // scaffold
     var textBowelmovement =
@@ -823,7 +827,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     debugPrint(_formKey.currentState!.value.toString());
                     setState(() {
                       formVal = _formKey.currentState?.value;
-                      setInsensible();
                     });
                   },
                   autovalidateMode: AutovalidateMode.disabled,
@@ -905,14 +908,17 @@ class _MyHomePageState extends State<MyHomePage> {
                                             if (name != "") {
                                               name += "\n";
                                             }
-                                            await Clipboard.setData(
-                                                ClipboardData(
-                                                    // ignore: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings
-                                                    text: "${textName.data}\n" +
-                                                        getShift() +
+                                            await Clipboard.setData(ClipboardData(
+                                                // ignore: prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings
+                                                text: "*${textName.data}*\n" +
+                                                    getShift() +
+                                                    "Ht ${_formKey.currentState?.value['Height']} Wt ${_formKey.currentState?.value['Weight']}\n"
                                                         "${textVitals.data}${textVitals.data != "" ? "\n" : ""}" +
-                                                        "${textInputoutput.data},${textOral.data}${textOral.data == "" ? "" : " "}${textOral.data == "" ? " " : ", "}${textFluidbalance.data}, ${textUrineoutput.data}, ${textBowelmovement.data}\n" +
-                                                        "${textHeightweightcheck.data}")); //${textInsensiblelosses.data}
+                                                    "${textInputoutput.data},${textOral.data}${textOral.data == "" ? "" : " "}${textOral.data == "" ? " " : ", "}${textFluidbalance.data}, ${textUrineoutput.data}, ${textBowelmovement.data}\n" +
+                                                    "${textHeightweightcheck.data}\n" +
+                                                    "Urine Output\n" +
+                                                    "${formVal?['Urine'] ?? ""}÷${formVal?['Weight'] ?? ""}÷${(formVal?['Shift'] ?? "Shift") == "Daily" ? "24" : (formVal?['Shift'] != "Custom" ? "8" : "Custom")}= ${calculateUO().toStringAsFixed(2)}cc/kg/hr\n" +
+                                                    "${formVal?['Urine'] ?? ""}÷${(formVal?['Shift'] ?? "Shift") == "Daily" ? "24" : (formVal?['Shift'] != "Custom" ? "8" : "Custom")}= ${((double.tryParse(formVal?['Urine']) ?? 0) / (double.tryParse((formVal?['Shift'] ?? "Shift") == "Daily" ? "24" : (formVal?['Shift'] != "Custom" ? "8" : "Custom")) ?? 1)).toStringAsFixed(2)}cc/hr")); //${textInsensiblelosses.data}
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(
                                               const SnackBar(
